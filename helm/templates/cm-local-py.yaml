@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-local-py
+data:
+  local.py: |
+    # Overrides
+    from .settings import *  # noqa: F401
+
+    SECRET_KEY = 'lksdf98wrhkjs88dsf8-324ksdm'
+
+    DEBUG = True
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': '{{ .Values.global.postgres.POSTGRES_DB }}',
+            'USER': '{{ .Values.global.postgres.POSTGRES_USER }}',
+            'PASSWORD': '{{ .Values.global.postgres.POSTGRES_PASSWORD }}',
+            'HOST': 'postgres',
+            'PORT': '',
+        },
+    }
+
+    ALLOWED_HOSTS = ['{{ .Values.global.ci_url }}']
+
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+    # TODO-specific settings
+    TODO_STAFF_ONLY = False
+    TODO_DEFAULT_LIST_SLUG = 'tickets'
+    TODO_DEFAULT_ASSIGNEE = None
+    TODO_PUBLIC_SUBMIT_REDIRECT = '/'

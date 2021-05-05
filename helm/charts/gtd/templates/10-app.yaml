@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - {{ .Chart.Name }}
+            topologyKey: kubernetes.io/hostname
+      initContainers:
+      - name: wait-postgres
+        image: alpine:3.6
+        command: ['/bin/sh', '-c', 'while ! getent ahostsv4 postgres; do sleep 1; echo -n .; done']
+      containers:
+        - name: {{ .Chart.Name }}
+          command:
+            - bash
+            - -l
+            - -c
+            - pipenv run python manage.py runserver 0.0.0.0:8000
+          image: {{ .Values.global.image_name }}
+          imagePullPolicy: Always
+          env:
+            - name: KUBERNETES_DEPLOYED
+              value: {{ now }}
+          ports:
+            - name: http
+              containerPort: 8000
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 30
+          volumeMounts:
+          - name: config-volume
+            mountPath: /app/gtd/project/local.py
+            subPath: local.py
+      volumes:
+      - name: config-volume
+        configMap:
+          name: django-todo-local-py
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  clusterIP: None
+  ports:
+    - port: 8000
+  selector:
+    app: {{ .Chart.Name }}

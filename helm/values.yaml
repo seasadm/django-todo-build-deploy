@@ -1,0 +1,5 @@
+global:
+  postgres:
+    POSTGRES_DB: "gtd"
+    POSTGRES_USER: "gtd"
+    POSTGRES_PASSWORD: "gtDckz00PZZa"

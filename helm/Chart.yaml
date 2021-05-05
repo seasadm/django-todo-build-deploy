@@ -1,0 +1,14 @@
+apiVersion: v2
+name: django-todo
+version: 0.0.1
+
+dependencies:
+- name: postgres
+  version: 0.1
+  condition: postgres.enabled
+- name: gtd
+  version: 0.1
+  condition: gtd.enabled
+- name: job-migrations
+  version: 0.1
+  condition: job-migrations.enabled

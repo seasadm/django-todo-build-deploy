@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: {{ .Chart.Name }}
+spec:
+ serviceName: {{ .Chart.Name }}
+ selector:
+   matchLabels:
+     service: {{ .Chart.Name }}
+ template:
+   metadata:
+     labels:
+       service: postgres
+   spec:
+     containers:
+     - name: postgres
+       image: postgres:13-alpine
+       env:
+{{- include "postgres_envs" . | indent 7 }}
+       - name: PGDATA
+         value: "/data/pg_data"
+       - name: POSTGRES_PORT
+         value: '5432'
+       ports:
+       - name: postgres
+         containerPort: 5432
+       livenessProbe:
+         timeoutSeconds: 1
+         initialDelaySeconds: 30
+         tcpSocket:
+           port: 5432
+       readinessProbe:
+         timeoutSeconds: 1
+         initialDelaySeconds: 5
+         exec:
+           command: [ "/bin/sh", "-i", "-c", "psql -h 127.0.0.1 -U $POSTGRES_USER -q -d $POSTGRES_USER -c 'SELECT 1'"]
+       lifecycle:
+         preStop:
+           exec:
+             command: [ "/bin/sh", "-c", "su postgres -c 'pg_ctl -m fast -w stop'" ]
+       volumeMounts:
+       - mountPath: /data
+         name: data
+     volumes:
+     - name: data
+       emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: {{ .Chart.Name }}
+spec:
+ clusterIP: None
+ selector:
+   service: {{ .Chart.Name }}
+ ports:
+ - name: postgres
+   port: 5432
+   targetPort: 5432
