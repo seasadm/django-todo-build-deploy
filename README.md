@@ -1,12 +1,14 @@
 # Repository with docker build and helm chart for GTD:
 
 [GTD](https://github.com/shacker/gtd) GTD: Container/stub site for django-todo
+
 [Django-todo](https://github.com/shacker/django-todo) is a reusable app that can be plugged into any
 running Django project.
 
 ## Installation
 
 `clone` the repository
+
 0. Install docker, kubectl and helm3 at your runner server.
 1. Log in your docker registry (docker login).
 2. Run build.sh with [IMAGENAME] parameter.
